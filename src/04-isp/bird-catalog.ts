@@ -1,39 +1,71 @@
+﻿// Refactorización: Principio de Segregación de Interfaces (ISP)
 
-/**
- * VIOLACIÓN AL PRINCIPIO DE SEGREGACIÓN DE INTERFAZ (ISP)
- * 
- * El catálogo de fauna define una interfaz "gorda" que obliga a las aves 
- * a implementar métodos que no les corresponden según su naturaleza.
- */
-
-interface Bird {
+// Capacidad: puede comer
+interface IEatable {
     eat(): void;
+}
+
+// Capacidad: puede volar
+interface IFlyable {
     fly(): void;
+}
+
+// Capacidad: puede nadar
+interface ISwimmable {
     swim(): void;
 }
 
-export class Toucan implements Bird {
-    public eat() { console.log('El Tucán está comiendo frutas.'); }
-    public fly() { console.log('El Tucán vuela sobre la selva.'); }
-    public swim() { console.log('El Tucán no suele nadar, pero implemento el método vacío.'); }
-}
+// Tucán — vuela y come, no nada
+export class Toucan implements IEatable, IFlyable {
 
-export class Hummingbird implements Bird {
-    public eat() { console.log('El Colibrí busca néctar.'); }
-    public fly() { console.log('El Colibrí aletea rápidamente.'); }
-    public swim() { throw new Error('Un colibrí no puede nadar'); }
-}
-
-/**
- * VIOLACIÓN FLAGRANTE: El Avestruz es un ave, pero NO VUELA.
- * La interfaz Bird le obliga a implementar fly(), causando una excepción en tiempo de ejecución
- * o un comportamiento inesperado.
- */
-export class Ostrich implements Bird {
-    public eat() { console.log('El Avestruz come hierbas.'); }
-    public fly() { 
-        // ¡Error! Violación de ISP.
-        throw new Error('Las avestruces NO vuelan.'); 
+    eat(): void {
+        console.log('[Tucán] Comiendo frutas tropicales.');
     }
-    public swim() { console.log('El Avestruz puede nadar si es necesario.'); }
+
+    fly(): void {
+        console.log('[Tucán] Volando sobre el dosel de la selva.');
+    }
 }
+
+// Colibrí — vuela y come, no nada
+export class Hummingbird implements IEatable, IFlyable {
+
+    eat(): void {
+        console.log('[Colibrí] Bebiendo néctar de orquídeas.');
+    }
+
+    fly(): void {
+        console.log('[Colibrí] Aleteando a 80 veces por segundo.');
+    }
+}
+
+// Avestruz — come y nada, no vuela (sin método fly() en su tipo)
+export class Ostrich implements IEatable, ISwimmable {
+
+    eat(): void {
+        console.log('[Avestruz] Comiendo hierbas de la sabana.');
+    }
+
+    swim(): void {
+        console.log('[Avestruz] Cruzando el río a nado.');
+    }
+}
+
+// Pingüino — come y nada, no vuela (sin método fly() en su tipo)
+export class Penguin implements IEatable, ISwimmable {
+
+    eat(): void {
+        console.log('[Pingüino] Atrapando peces en el río.');
+    }
+
+    swim(): void {
+        console.log('[Pingüino] Nadando a alta velocidad.');
+    }
+}
+
+// Uso por capacidades segregadas
+const voladoras: IFlyable[] = [new Toucan(), new Hummingbird()];
+const nadadoras: ISwimmable[] = [new Ostrich(), new Penguin()];
+
+voladoras.forEach(ave => ave.fly());
+nadadoras.forEach(ave => ave.swim());
