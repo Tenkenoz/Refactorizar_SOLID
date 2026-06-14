@@ -1,46 +1,87 @@
+﻿// Refactorización: Principio de Sustitución de Liskov (LSP)
 
-/**
- * VIOLACIÓN AL PRINCIPIO DE SUSTITUCIÓN DE LISKOV (LSP)
- * 
- * En la flota de la reserva, intentamos manejar diversos vehículos.
- * Sin embargo, el cliente se ve obligado a conocer los detalles internos
- * de cada marca para poder operar, rompiendo la transparencia de la abstracción.
- */
+// Contrato común para todos los vehículos de la flota
+interface IVehicle {
+    readonly model: string;
+    getDetails(): string;
+}
 
-export class Tesla { constructor(public model: string) {} }
-export class Audi  { constructor(public model: string) {} }
-export class Toyota{ constructor(public model: string) {} }
-export class Honda { constructor(public model: string) {} }
-export class Ford  { constructor(public model: string) {} }
+// Implementación Tesla
+class Tesla implements IVehicle {
 
+    constructor(public readonly model: string) {}
+
+    getDetails(): string {
+        return `Tesla ${this.model} — Carga eléctrica al 100%`;
+    }
+}
+
+// Implementación Audi
+class Audi implements IVehicle {
+
+    constructor(public readonly model: string) {}
+
+    getDetails(): string {
+        return `Audi ${this.model} — Tracción Quattro activada`;
+    }
+}
+
+// Implementación Toyota
+class Toyota implements IVehicle {
+
+    constructor(public readonly model: string) {}
+
+    getDetails(): string {
+        return `Toyota ${this.model} — Motor híbrido listo`;
+    }
+}
+
+// Implementación Honda
+class Honda implements IVehicle {
+
+    constructor(public readonly model: string) {}
+
+    getDetails(): string {
+        return `Honda ${this.model} — VTEC activado`;
+    }
+}
+
+// Implementación Ford
+class Ford implements IVehicle {
+
+    constructor(public readonly model: string) {}
+
+    getDetails(): string {
+        return `Ford ${this.model} — Built Tough`;
+    }
+}
+
+// Nuevo vehículo agregado sin modificar VehicleManager
+class Dron implements IVehicle {
+
+    constructor(public readonly model: string) {}
+
+    getDetails(): string {
+        return `Dron ${this.model} — Vigilancia aérea activa`;
+    }
+}
+
+// Manager — opera sobre la abstracción sin usar instanceof
 export class VehicleManager {
 
-    /**
-     * VIOLACIÓN: Este método rompe LSP y OCP. 
-     * Si agregamos una nueva marca (ej. Volvo), debemos venir aquí a agregar otro 'if' o 'case'.
-     * Además, no podemos tratar a todos los vehículos por igual.
-     */
-    static printVehicleDetails( vehicles: (Tesla | Audi | Toyota | Honda | Ford)[] ) {
-        
-        vehicles.forEach( vehicle => {
-
-            if( vehicle instanceof Tesla ) {
-                console.log('Tesla Model:', vehicle.model, 'Carga eléctrica al 100%');
-            }
-            if( vehicle instanceof Audi ) {
-                console.log('Audi Model:', vehicle.model, 'Tracción Quattro activada');
-            }
-            if( vehicle instanceof Toyota ) {
-                console.log('Toyota Model:', vehicle.model, 'Motor híbrido listo');
-            }
-            if( vehicle instanceof Honda ) {
-                console.log('Honda Model:', vehicle.model, 'VTEC activado');
-            }
-            if( vehicle instanceof Ford ) {
-                console.log('Ford Model:', vehicle.model, 'Built Tough');
-            }
-
+    static printVehicleDetails(vehicles: IVehicle[]): void {
+        vehicles.forEach(vehicle => {
+            console.log(`[VehicleManager] ${vehicle.getDetails()}`);
         });
     }
-
 }
+
+// Composición
+VehicleManager.printVehicleDetails([
+    new Tesla('Model X'),
+    new Audi('Q7'),
+    new Toyota('Land Cruiser'),
+    new Honda('CR-V'),
+    new Ford('F-150'),
+    new Dron('DJI-Mavic'),
+]);
