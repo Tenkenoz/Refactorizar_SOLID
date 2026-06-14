@@ -1,32 +1,55 @@
-
-/**
- * VIOLACIÓN AL PRINCIPIO DE ABIERTO/CERRADO (OCP)
- * 
- * En este módulo de noticias de la reserva, el servicio depende directamente
- * de la librería externa 'axios'. Si quisiéramos usar 'fetch' u otra librería,
- * tendríamos que modificar este código interno.
- */
+﻿// Refactorización: Principio Abierto/Cerrado (OCP)
 
 import axios from 'axios';
 
+// Interfaz que abstrae cualquier cliente HTTP
+interface IHttpClient {
+    get<T>(url: string): Promise<T>;
+}
+
+// Adaptador sobre axios
+class AxiosAdapter implements IHttpClient {
+
+    async get<T>(url: string): Promise<T> {
+        const response = await axios.get<T>(url);
+        return response.data;
+    }
+}
+
+// Adaptador sobre fetch nativo — listo para sustituir AxiosAdapter sin modificar servicios
+class FetchAdapter implements IHttpClient {
+
+    async get<T>(url: string): Promise<T> {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+        return response.json() as Promise<T>;
+    }
+}
+
+// Servicio de noticias — depende de la abstracción, no de axios
 export class NewsService {
 
-    // VIOLACIÓN: Dependencia rígida de axios.get()
-    // Si la API cambia o queremos cambiar de cliente HTTP, este código debe "abrirse" para modificación.
-    async getLatestNews() {
-        console.log('Obteniendo noticias de la reserva biológica...');
-        const resp = await axios.get('https://jsonplaceholder.typicode.com/posts');
-        return resp.data;
-    }
+    constructor(private readonly http: IHttpClient) {}
 
+    async getLatestNews(): Promise<unknown> {
+        return this.http.get('https://jsonplaceholder.typicode.com/posts');
+    }
 }
 
+// Servicio de galería — depende de la abstracción, no de axios
 export class PhotosService {
 
-    async getGallery() {
-        // Otra violación repetida: si mañana axios desaparece, tenemos que buscar todos los archivos que lo usan.
-        const resp = await axios.get('https://jsonplaceholder.typicode.com/photos');
-        return resp.data;
-    }
+    constructor(private readonly http: IHttpClient) {}
 
+    async getGallery(): Promise<unknown> {
+        return this.http.get('https://jsonplaceholder.typicode.com/photos');
+    }
 }
+
+// Composición — único punto de cambio al migrar de librería HTTP
+const httpClient: IHttpClient = new AxiosAdapter();
+const newsService = new NewsService(httpClient);
+const photosService = new PhotosService(httpClient);
+
+newsService.getLatestNews().then(console.log);
+photosService.getGallery().then(data => console.log('Fotos:', Array.isArray(data) ? data.length : 0));
